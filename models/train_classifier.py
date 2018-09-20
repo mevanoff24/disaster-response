@@ -17,38 +17,19 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
-# category_names = ['related', 'request', 'offer',
-#        'aid_related', 'medical_help', 'medical_products', 'search_and_rescue',
-#        'security', 'military', 'child_alone', 'water', 'food', 'shelter',
-#        'clothing', 'money', 'missing_people', 'refugees', 'death', 'other_aid',
-#        'infrastructure_related', 'transport', 'buildings', 'electricity',
-#        'tools', 'hospitals', 'shops', 'aid_centers', 'other_infrastructure',
-#        'weather_related', 'floods', 'storm', 'fire', 'earthquake', 'cold',
-#        'other_weather', 'direct_report']
-
-
-
-# def load_data(database_filepath):
-#     """
-#     Loads data from database
-
-#     Args:
-#         database_filepath: path to database
-
-#     Returns:
-#         (DataFrame) X: feature
-#         (DataFrame) Y: labels
-
-#     """
-#     engine = create_engine('sqlite:///' + database_filepath)
-#     df = pd.read_sql_query('select * from cleanData', engine)
-
-#     X = df['message'].values
-#     y = df.drop(['id','message','original','genre'], axis=1)
-#     category_names = y.columns
-#     return X, y, category_names
 
 def load_data(database_filepath):
+    '''
+    input: (
+        database_filepath: path to database
+            )
+    Loads data from sqlite database 
+    output: (
+        X: features dataframe
+        y: target dataframe
+        category_names: names of targets
+        )
+    '''
     # table name
     table_name = 'disaster'
     # load data from database
@@ -61,26 +42,6 @@ def load_data(database_filepath):
     category_names = y.columns
     return X, y, category_names
 
-# def tokenize(text):
-#     """
-#     Tokenizes a given text.
-
-#     Args:
-#         text: text string
-
-#     Returns:
-#         (str[]): array of clean tokens
-
-#     """
-#     tokens = word_tokenize(text)
-#     lemmatizer = WordNetLemmatizer()
-
-#     clean_tokens = []
-#     for tok in tokens:
-#         clean_tok = lemmatizer.lemmatize(tok).lower().strip()
-#         clean_tokens.append(clean_tok)
-
-#     return clean_tokens
 
 def tokenize(text, lemma=True, remove_stop=True, remove_short=True):
     '''
@@ -99,7 +60,6 @@ def tokenize(text, lemma=True, remove_stop=True, remove_short=True):
     STOPWORDS = list(set(stopwords.words('english')))
     # initialize lemmatier
     lemmatizer = WordNetLemmatizer()
-
     # split string into words (tokens)
     tokens = word_tokenize(text)
     # remove short words
@@ -113,46 +73,50 @@ def tokenize(text, lemma=True, remove_stop=True, remove_short=True):
 
 
 def build_model():
-    """Builds classification model """
-
+    '''Builds classification model'''
+    # model pipeline
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
         ('tfidf', TfidfTransformer()),
-        ('clf', MultiOutputClassifier(RandomForestClassifier()))
+        ('clf', MultiOutputClassifier(RandomForestClassifier(random_state=100)))
     ])
-
+    # hyper-parameter grid
     param_grid = {
-        # 'vect__ngram_range': ((1, 1)),
         # 'vect__ngram_range': ((1, 1), (1, 2)),
         'clf__estimator__min_samples_split': [2, 4],
     }
-
-    cv = GridSearchCV(pipeline, param_grid=param_grid, verbose=2, n_jobs=1, cv=None)
+    # create model 
+    cv = GridSearchCV(pipeline, param_grid=param_grid, verbose=2, n_jobs=4, cv=3)
     return cv
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
-    """
-    Evaluate the model against a test dataset
-
-    Args:
-        model: Trained model
-        X_test: Test features
-        Y_test: Test labels
-        category_names: String array of category names
-    """
+    '''
+    input: (
+        model: trained model 
+        X_test: Test features 
+        Y_test: Test labels 
+        category_names: names of lables
+            )
+    Evaluate a trained model against a test dataset
+    '''
+    # get predictions 
     y_preds = model.predict(X_test)
+    # print classification report
     print(classification_report(y_preds, Y_test.values, target_names=category_names))
+    # print raw accuracy score 
+    print('Accuracy Score'.format(np.mean(Y_test.values == y_preds))
 
 
 def save_model(model, model_filepath):
-    """
-    Save the model to a Python pickle
-
-    Args:
-        model: Trained model
-        model_filepath: Path where to save the model
-    """
+    '''
+    input: (
+        model: trained model 
+        model_filepath: filepath to save model in binary form 
+            )
+    Save the model to a Python pickle file 
+    '''
+    # save model binary 
     pickle.dump(model, open(model_filepath, 'wb'))
 
 

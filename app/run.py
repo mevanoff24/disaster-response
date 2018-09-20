@@ -19,12 +19,22 @@ from collections import Counter
 
 app = Flask(__name__)
 
-
+# stopwords
 STOPWORDS = set(stopwords.words('english'))
+# add some weird words, mess with visuals 
 STOPWORDS = STOPWORDS.union({'wa', 'said', 'ha', "n't", 'http'})
 
 
 def tokenize(text):
+    '''
+    input: (
+        text: list or numpy array
+            )
+    Function lemmatizes and tokenizes the text based on stopwords and length of token
+    output: (
+        returns cleaned tokens in list 
+            )
+    '''
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
     clean_tokens = []
@@ -36,14 +46,25 @@ def tokenize(text):
     return clean_tokens
 
 
-def compute_word_counts(message, load=True, filepath='../data/counts.npz'):
+def compute_word_counts(messages, load=True, filepath='../data/counts.npz'):
+    '''
+    input: (
+        messages: list or numpy array
+        load: Boolean value if load or run model 
+        filepath: filepath to save or load data
+            )
+    Function computes the top 20 words in the dataset with counts of each term
+    output: (
+        top_words: list
+        top_counts: list 
+            )
+    '''
     if load:
-        print('loading')
         data = np.load(filepath)
         return list(data['top_words']), list(data['top_counts'])
     else:
         counter = Counter()
-        for message in df.message.values:
+        for message in messages:
             tokens = tokenize(message)
             for token in tokens:
                 counter[token] += 1
@@ -51,22 +72,25 @@ def compute_word_counts(message, load=True, filepath='../data/counts.npz'):
         top_words = [word[0] for word in top]
         top_counts = [count[1] for count in top]
         np.savez(filepath, top_words=top_words, top_counts=top_counts)
-        return top_words, top_counts
-
-
-    counter = Counter()
-    for message in df.message.values:
-        tokens = tokenize(message)
-        for token in tokens:
-            counter[token] += 1
-    top = counter.most_common(20)
-    top_words = [word[0] for word in top]
-    top_counts = [count[1] for count in top]
+        return list(top_words), list(top_counts)
 
 
 def compute_LSA(messages, load=True, filepath='../data/lsa.npz'):
+    '''
+    input: (
+        messages: list or numpy array
+        load: Boolean value if load or run model 
+        filepath: filepath to save or load data
+            )
+    Function computes Latent Semantic Analysis for creating a vector representation of text. 
+    Gives a way to compare words for their similarity by calculating the distance between vectors.
+    output: (
+        list for first dimension of SVD
+        list for second dimension of SVD
+        names of features 
+            )
+    '''
     if load:
-        print('loading')
         data = np.load(filepath)
         return list(data['Z0']), list(data['Z1']), list(data['names'])
     else:
@@ -100,16 +124,8 @@ def index():
 
     # top 20 words and counts 
     top_words, top_counts = compute_word_counts(df.message.values)
-    # counter = Counter()
-    # for message in df.message.values:
-    #     tokens = tokenize(message)
-    #     for token in tokens:
-    #         counter[token] += 1
-    # top = counter.most_common(20)
-    # top_words = [word[0] for word in top]
-    # top_counts = [count[1] for count in top]
 
-    # lsa 
+    # LSA
     Z0, Z1, names = compute_LSA(df.message.values)
 
     # create visuals
