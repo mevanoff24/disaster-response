@@ -35,11 +35,15 @@ def tokenize(text):
         returns cleaned tokens in list 
             )
     '''
+    # split string into words (tokens)    
     tokens = word_tokenize(text)
+    # initialize lemmatier
     lemmatizer = WordNetLemmatizer()
     clean_tokens = []
+    # remove short words and stopwords
     for tok in tokens:
         if (len(tok) > 2) and (tok not in STOPWORDS):
+            # put words into base form
             clean_tok = lemmatizer.lemmatize(tok).lower().strip()
             clean_tokens.append(clean_tok)
 
@@ -60,17 +64,21 @@ def compute_word_counts(messages, load=True, filepath='../data/counts.npz'):
             )
     '''
     if load:
+        # load arrays
         data = np.load(filepath)
         return list(data['top_words']), list(data['top_counts'])
     else:
+        # get top words 
         counter = Counter()
         for message in messages:
             tokens = tokenize(message)
             for token in tokens:
                 counter[token] += 1
+        # top 20 words 
         top = counter.most_common(20)
         top_words = [word[0] for word in top]
         top_counts = [count[1] for count in top]
+        # save arrays
         np.savez(filepath, top_words=top_words, top_counts=top_counts)
         return list(top_words), list(top_counts)
 
@@ -91,13 +99,17 @@ def compute_LSA(messages, load=True, filepath='../data/lsa.npz'):
             )
     '''
     if load:
+        # load arrays
         data = np.load(filepath)
         return list(data['Z0']), list(data['Z1']), list(data['names'])
     else:
+        # Tf-Idf
         vect = TfidfVectorizer(max_features=100, tokenizer=tokenize)
         X_tfidf = vect.fit_transform(messages)
+        # SVD 
         svd = TruncatedSVD()
         Z = svd.fit_transform(X_tfidf.toarray().T)
+        # save arrays
         np.savez(filepath, Z0=Z[:,0], Z1=Z[:,1], names=vect.get_feature_names())
         return Z[:,0], Z[:,1], vect.get_feature_names()
 
@@ -198,15 +210,20 @@ def index():
 
             'layout': {
                 'title': 'Word Similarities (LSA)',
-                'yaxis': {
-                    'title': "SVD1"
-                },
-                'xaxis': {
-                    'title': "SVD2"
-                }
+                'xaxis': dict(
+                    autorange=True,
+                    zeroline=False,
+                    ticks='',
+                    showticklabels=False
+                ),
+                'yaxis': dict(
+                    autorange=True,
+                    zeroline=False,
+                    ticks='',
+                    showticklabels=False
+                )
             }
         }
-
     ]
     
     # encode plotly graphs in JSON

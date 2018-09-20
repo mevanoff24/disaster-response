@@ -35,10 +35,10 @@ def load_data(database_filepath):
     # load data from database
     engine = create_engine('sqlite:///{}'.format(database_filepath))
     df = pd.read_sql_table(table_name, engine)
-    # X = df['message']
-    # y = df[category_names].values
+    # create X and y
     X = df['message'].values
     y = df.drop(['id','message','original','genre'], axis=1)
+    # get names 
     category_names = y.columns
     return X, y, category_names
 
