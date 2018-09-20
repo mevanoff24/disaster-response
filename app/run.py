@@ -35,6 +35,35 @@ def tokenize(text):
 
     return clean_tokens
 
+
+def compute_word_counts(message, load=True, filepath='../data/counts.npz'):
+    if load:
+        print('loading')
+        data = np.load(filepath)
+        return list(data['top_words']), list(data['top_counts'])
+    else:
+        counter = Counter()
+        for message in df.message.values:
+            tokens = tokenize(message)
+            for token in tokens:
+                counter[token] += 1
+        top = counter.most_common(20)
+        top_words = [word[0] for word in top]
+        top_counts = [count[1] for count in top]
+        np.savez(filepath, top_words=top_words, top_counts=top_counts)
+        return top_words, top_counts
+
+
+    counter = Counter()
+    for message in df.message.values:
+        tokens = tokenize(message)
+        for token in tokens:
+            counter[token] += 1
+    top = counter.most_common(20)
+    top_words = [word[0] for word in top]
+    top_counts = [count[1] for count in top]
+
+
 def compute_LSA(messages, load=True, filepath='../data/lsa.npz'):
     if load:
         print('loading')
@@ -70,14 +99,15 @@ def index():
     target_names = list(target_distribution.index)
 
     # top 20 words and counts 
-    counter = Counter()
-    for message in df.message.values:
-        tokens = tokenize(message)
-        for token in tokens:
-            counter[token] += 1
-    top = counter.most_common(20)
-    top_words = [word[0] for word in top]
-    top_counts = [count[1] for count in top]
+    top_words, top_counts = compute_word_counts(df.message.values)
+    # counter = Counter()
+    # for message in df.message.values:
+    #     tokens = tokenize(message)
+    #     for token in tokens:
+    #         counter[token] += 1
+    # top = counter.most_common(20)
+    # top_words = [word[0] for word in top]
+    # top_counts = [count[1] for count in top]
 
     # lsa 
     Z0, Z1, names = compute_LSA(df.message.values)
