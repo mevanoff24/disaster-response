@@ -11,7 +11,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 from nltk.corpus import stopwords
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.multioutput import MultiOutputClassifier
