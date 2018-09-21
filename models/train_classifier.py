@@ -8,6 +8,7 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 
 import pandas as pd
+import numpy as np
 from sqlalchemy import create_engine
 from nltk.corpus import stopwords
 from sklearn.pipeline import Pipeline
@@ -82,9 +83,12 @@ def build_model():
     ])
     # hyper-parameter grid
     param_grid = {
-        # 'vect__ngram_range': ((1, 1), (1, 2)),
+        'vect__ngram_range': ((1, 1), (1, 2)),
         'clf__estimator__min_samples_split': [2, 4],
+        'clf__estimator__max_features': ['log2', 'auto'],
+        'clf__estimator__n_estimators': [100, 250],
     }
+   
     # create model 
     cv = GridSearchCV(pipeline, param_grid=param_grid, verbose=2, n_jobs=4, cv=3)
     return cv
@@ -105,7 +109,7 @@ def evaluate_model(model, X_test, Y_test, category_names):
     # print classification report
     print(classification_report(y_preds, Y_test.values, target_names=category_names))
     # print raw accuracy score 
-    print('Accuracy Score'.format(np.mean(Y_test.values == y_preds))
+    print('Accuracy Score: {}'.format(np.mean(Y_test.values == y_preds)))
 
 
 def save_model(model, model_filepath):
