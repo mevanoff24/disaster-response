@@ -22,8 +22,8 @@ app = Flask(__name__)
 # stopwords
 STOPWORDS = set(stopwords.words('english'))
 # add some weird words, mess with visuals 
-STOPWORDS = STOPWORDS.union({'wa', 'said', 'ha', "n't", 'http'})
-
+STOPWORDS = STOPWORDS.union({'wa', 'said', 'ha', "n't", 'http', 'also'})
+# STOPWORDS = list(STOPWORDS)
 
 def tokenize(text):
     '''
@@ -42,7 +42,7 @@ def tokenize(text):
     clean_tokens = []
     # remove short words and stopwords
     for tok in tokens:
-        if (len(tok) > 2) and (tok not in STOPWORDS):
+        if (len(tok) > 2) and (tok.lower() not in STOPWORDS):
             # put words into base form
             clean_tok = lemmatizer.lemmatize(tok).lower().strip()
             clean_tokens.append(clean_tok)
